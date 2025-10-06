@@ -1,0 +1,18 @@
+tau,name f1,name f2,overlap_KOw_0-2ya,overlap_KOl_0-2ya,overlap_Subw_0-2ya,overlap_Subl_0-2ya,overlap_Decw_0-2ya,overlap_Decl_0-2ya,overlap_wins_any_0-2ya,overlap_losses_any_0-2ya,overlap_fought_any_0-2ya,overlap_KOw_2-4ya,overlap_KOl_2-4ya,overlap_Subw_2-4ya,overlap_Subl_2-4ya,overlap_Decw_2-4ya,overlap_Decl_2-4ya,overlap_wins_any_2-4ya,overlap_losses_any_2-4ya,overlap_fought_any_2-4ya,tot_KOw_0-2ya_f1,tot_KOw_0-2ya_f2,tot_KOl_0-2ya_f1,tot_KOl_0-2ya_f2,tot_Subw_0-2ya_f1,tot_Subw_0-2ya_f2,tot_Subl_0-2ya_f1,tot_Subl_0-2ya_f2,tot_Decw_0-2ya_f1,tot_Decw_0-2ya_f2,tot_Decl_0-2ya_f1,tot_Decl_0-2ya_f2,tot_wins_any_0-2ya_f1,tot_wins_any_0-2ya_f2,tot_losses_any_0-2ya_f1,tot_losses_any_0-2ya_f2,tot_fought_any_0-2ya_f1,tot_fought_any_0-2ya_f2,tot_KOw_2-4ya_f1,tot_KOw_2-4ya_f2,tot_KOl_2-4ya_f1,tot_KOl_2-4ya_f2,tot_Subw_2-4ya_f1,tot_Subw_2-4ya_f2,tot_Subl_2-4ya_f1,tot_Subl_2-4ya_f2,tot_Decw_2-4ya_f1,tot_Decw_2-4ya_f2,tot_Decl_2-4ya_f1,tot_Decl_2-4ya_f2,tot_wins_any_2-4ya_f1,tot_wins_any_2-4ya_f2,tot_losses_any_2-4ya_f1,tot_losses_any_2-4ya_f2,tot_fought_any_2-4ya_f1,tot_fought_any_2-4ya_f2
+1270,Benoit Saint Denis,Mauricio Ruffy,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,2,0
+1270,Mason Jones,Bolaji Oki,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0
+1270,Modestas Bukauskas,Paul Craig,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,0,0,2,0,0,1,2,1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1
+1270,Nassourdine Imavov,Caio Borralho,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,0,1,1,0,0,1,1,0,0,1,1
+1270,Oumar Sy,Brendson Ribeiro,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,1,1,0,0,0,1,0,1,1,2,0,2,1,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+1270,Rinat Fakhretdinov,Andreas Gustafsson,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0
+1270,Robert Bryczek,Brad Tavares,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+1270,Sam Hughes,Shauna Bannon,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+1270,Sam Patterson,Trey Waters,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1,0,0,0,1,1,0,1,1
+1271,Alexander Hernandez,Diego Ferreira,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2,0,0,0,2,0,2,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,1,0,2,0
+1271,David Martinez,Rob Font,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+1271,Diego Lopes,Jean Silva,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,0,0,0,0,0,0,0,0,3,0,0,0,3,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,1,0
+1271,Dusko Todorovic,Jose Daniel Medina,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0
+1271,Joaquim Silva,Claudio Puelles,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,1,1,0,0,1,1
+1271,Kelvin Gastelum,Dustin Stoltzfus,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0,1,0,0,0,1,1,0,1,1,2,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,1,0,2
+1271,Rafa Garcia,Jared Gordon,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,2,2,0,1,3,2,0,1,3,3
+1271,Tatiana Suarez,Amanda Lemos,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,0,0,2,0,0,0,2

@@ -1,0 +1,18 @@
+# Python
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data (optional to ignore)
+/data/raw/
+/data/interim/
+/data/processed/
+/data/output/
+
+# MLflow local store
+/mlruns/
+
+# VS Code
+.vscode/
