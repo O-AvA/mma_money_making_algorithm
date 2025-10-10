@@ -39,8 +39,9 @@ class PredictionProcessor:
         if ytrue is not None: 
             df_names['result'] = ytrue
 
+        # Internal outcome codes and their human-readable names
+        cols = ['Aa', 'Ab', 'Ac', 'B', 'Ca', 'Cb', 'Cc'] 
         real_cols = ['Win KO','Win Sub','Win Dec','Draw','Loss Dec','Loss Sub','Loss KO'] 
-        cols = ['Aa', 'Ab', 'Ac', 'B', 'Cc', 'Cb', 'Ca'] 
 
         sample_cols = [str(i) for i in range(probas.shape[-1])] 
         df_prob = pd.DataFrame(columns=sample_cols, data=probas) 
@@ -62,22 +63,23 @@ class PredictionProcessor:
         # Merge upp_low halves side-by-side so each fight/outcome has both sample sets
         df_prob7 = pd.concat([df_prob1, df_prob2[sample_cols2]], axis=1)
 
-        # Get probability distributions and save (now averages include both halves)
+        # Map to human-readable outcome names for saved CSVs and downstream plots
+        df_prob7['outcome'] = df_prob7['outcome'].map(dict(zip(cols, real_cols)))
         self._probability_distribution(df_prob7, sample_cols, 7) 
 
         # 7-class calibration (keep draws included so all 7 outcomes are evaluated)
         if save_for == 'valid': 
             self._plot_calibration(df_prob7, 7)
 
-        # For 2-class, exclude draws from targets
+        # For 2-class, exclude draws from targets where applicable
         df_for_binary = df_prob7[df_prob7['result'] != 3] if save_for == 'valid' else df_prob7
 
-        # Group outcomes -> Win (Aa,Ab,Ac), Draw (B), Loss (Cc,Cb,Ca)
-        win_labels = ['Aa', 'Ab', 'Ac']
-        draw_label = 'B'
-        loss_labels = ['Cc', 'Cb', 'Ca']
+        # Group outcomes -> Win, Draw, Loss using human-readable labels
+        win_labels = ['Win KO', 'Win Sub', 'Win Dec']
+        draw_label = 'Draw'
+        loss_labels = ['Loss Dec', 'Loss Sub', 'Loss KO']
 
-        gcols = ['name f1', 'name f2']
+        gcols = ['name f1', 'name f2','tau']
         num_cols = sample_cols  # both sample sets for each row
 
         wins_sum = (
@@ -104,15 +106,22 @@ class PredictionProcessor:
         wins_adj = _adjust_by_draw(wins_sum, draws_sum)
         losses_adj = _adjust_by_draw(losses_sum, draws_sum)
 
+        # Merge back metadata like 'tau' (one per fight) before saving/calibrating
+        meta_cols = ['name f1', 'name f2', 'tau']
+        tau_map = df_for_binary[meta_cols].drop_duplicates()
+
         wins_final = wins_adj.copy()
         wins_final['outcome'] = 'Win'
+        wins_final = wins_final.merge(tau_map, on=gcols, how='left')
+
         losses_final = losses_adj.copy()
         losses_final['outcome'] = 'Lose'
+        losses_final = losses_final.merge(tau_map, on=gcols, how='left')
 
         if save_for == 'valid' and 'result' in df_for_binary.columns:
-            fight_result = df_for_binary[['name f1', 'name f2', 'result']].drop_duplicates()
-            wins_final = wins_final.merge(fight_result, on=['name f1', 'name f2'], how='left')
-            losses_final = losses_final.merge(fight_result, on=['name f1', 'name f2'], how='left')
+            fight_result = df_for_binary[['name f1', 'name f2', 'tau', 'result']].drop_duplicates()
+            wins_final = wins_final.merge(fight_result, on=gcols, how='left')
+            losses_final = losses_final.merge(fight_result, on=gcols, how='left')
 
         df_prob2 = pd.concat([wins_final, losses_final], ignore_index=True)
 
@@ -142,13 +151,19 @@ class PredictionProcessor:
             columns=['avg','std','perc5','perc95','mean2stdp','mean2stdm','min','max'],
             data=np.array([avg, std, perc5, perc95, mean2stdp, mean2stdm, minp, maxp]).T,
         )
-
+        
         # Attach metadata from the same (post-processed) df_prob
-        df_preds = pd.concat([df_prob[['name f1', 'name f2','outcome']], df_preds], axis=1)
+        meta_cols = [c for c in ['name f1', 'name f2', 'outcome', 'tau'] if c in df_prob.columns]
+        df_preds = pd.concat([df_prob[meta_cols], df_preds], axis=1)
 
         save_for = 'valid' if 'result' in df_prob.columns else 'pred'
         preds_path = self.CVmain.cal_preds_path if save_for == 'valid' else self.CVmain.preds_path
         preds_path = str(preds_path).replace('preds', f'preds{n_classes}') 
+        sort_cols = ['name f1']
+        if 'tau' in df_preds.columns:
+            sort_cols = ['tau'] + sort_cols
+        df_preds.sort_values(by=sort_cols, inplace=True)
+        df_preds.reset_index(drop=True, inplace=True)
         store_csv(df_preds, preds_path)
         logger.info(f'Stored predictions on {save_for} for {n_classes}') 
 
@@ -204,13 +219,26 @@ class PredictionProcessor:
         plot_path = str(self.CVmain.cal_plot_path).replace(suffix, f'{suffix}{n_classes}')
 
         if n_classes == 7:
-            # Map outcomes to result codes and display names (exclude Draw -> 2x3 grid)
-            labels = ['Aa','Ab','Ac','Cc','Cb','Ca']
-            label_to_code = {'Aa':0, 'Ab':1, 'Ac':2, 'Cc':4, 'Cb':5, 'Ca':6}
-            label_to_name = {
-                'Aa':'Win KO','Ab':'Win Sub','Ac':'Win Dec',
-                'Cc':'Loss Dec','Cb':'Loss Sub','Ca':'Loss KO'
-            }
+            # Support both human-readable outcomes and legacy internal codes
+            named_outcomes = ['Win KO','Win Sub','Win Dec','Draw','Loss Dec','Loss Sub','Loss KO']
+            uses_named = valid_probas['outcome'].isin(named_outcomes).any()
+
+            if uses_named:
+                # Exclude Draw -> 2x3 grid
+                labels = ['Win KO','Win Sub','Win Dec','Loss Dec','Loss Sub','Loss KO']
+                label_to_code = {
+                    'Win KO': 0, 'Win Sub': 1, 'Win Dec': 2,
+                    'Loss Dec': 4, 'Loss Sub': 5, 'Loss KO': 6
+                }
+                label_to_name = {k: k for k in labels}
+            else:
+                # Legacy codes
+                labels = ['Aa','Ab','Ac','Ca','Cb','Cc']
+                label_to_code = {'Aa':0, 'Ab':1, 'Ac':2, 'Ca':4, 'Cb':5, 'Cc':6}
+                label_to_name = {
+                    'Aa':'Win KO','Ab':'Win Sub','Ac':'Win Dec',
+                    'Ca':'Loss Dec','Cb':'Loss Sub','Cc':'Loss KO'
+                }
 
             # Subplots grid (2x3)
             fig, axes = plt.subplots(2, 3, figsize=(14, 9))
