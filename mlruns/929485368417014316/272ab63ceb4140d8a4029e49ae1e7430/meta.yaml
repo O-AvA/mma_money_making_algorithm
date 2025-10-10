@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/OAVAI/Desktop/mma_light/mlruns/929485368417014316/272ab63ceb4140d8a4029e49ae1e7430/artifacts
+end_time: 1760053499737
+entry_point_name: ''
+experiment_id: '929485368417014316'
+lifecycle_stage: active
+run_id: 272ab63ceb4140d8a4029e49ae1e7430
+run_name: symmetrize_symm_standalone
+run_uuid: 272ab63ceb4140d8a4029e49ae1e7430
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760053496042
+status: 3
+tags: []
+user_id: OAVAI

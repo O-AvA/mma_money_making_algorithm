@@ -108,8 +108,8 @@ def upcoming_elos(wl_path):
 
     
     dfp = dfp.unduplicate()
-    dfp['E1'] = expectancy(dfp['R f1'], dfp['R f2']) 
-    dfp['E2'] = 1-dfp['E1'] 
+    dfp['E f1'] = expectancy(dfp['R f1'], dfp['R f2']) 
+    dfp['E f2'] = 1-dfp['E f1'] 
 
     UpcomingFights().append_features(dfp)
 

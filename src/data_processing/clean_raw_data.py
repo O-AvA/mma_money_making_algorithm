@@ -13,6 +13,8 @@ import numpy as np
 from datetime import datetime, timedelta
 from loguru import logger
 from typing import Dict, List, Tuple, Optional, Union, Any
+from pathlib import Path
+import mlflow
 
 #from config import settings
 from src.utils.general import (
@@ -702,30 +704,118 @@ def process_all_data(prefer_external=True, new_fights_only=False) -> None:
     5. Save processed data
     """
     logger.info("Starting UFC data processing pipeline")
+
+    # Check if we're running within a pipeline context
+    from src.utils.mlflow_pipeline import get_pipeline_manager
+    pipeline_manager = get_pipeline_manager()
     
-    processor = UFCDataProcessor(prefer_external, new_fights_only) 
+    if pipeline_manager:
+        # We're in a managed pipeline - log within current context
+        _run_data_processing(prefer_external, new_fights_only)
+    else:
+        # Standalone execution - create our own MLflow run
+        try:
+            repo_root = Path(__file__).resolve().parents[2]
+            tracking_dir = repo_root / "mlruns"
+            tracking_dir.mkdir(parents=True, exist_ok=True)
+            mlflow.set_tracking_uri(tracking_dir.as_uri())
+            mlflow.set_experiment("data_processing_standalone")
+        except Exception as e:
+            logger.warning(f"MLflow setup failed (continuing without custom tracking URI): {e}")
+
+        with mlflow.start_run(run_name="clean_raw_data_standalone"):
+            _run_data_processing(prefer_external, new_fights_only)
+
+
+def _run_data_processing(prefer_external: bool, new_fights_only: bool) -> None:
+    """Internal function that performs the actual data processing."""
+    processor = UFCDataProcessor(prefer_external, new_fights_only)
     
+    # Log run parameters
+    mlflow.log_params({
+        "prefer_external": prefer_external,
+        "new_fights_only": new_fights_only,
+    })
+
     try:
         logger.info("Loading raw data")
-        processor.load_raw_data() 
-        
-        logger.info('Starting data cleaning.') 
-        clean_data = processor.clean_data() 
+        processor.load_raw_data()
 
-        logger.info('Storing raw data') 
+        # Log basic metrics about the raw inputs
+        for name in ['df_events', 'df_outcomes', 'df_stats', 'df_fighters']:
+            df = getattr(processor, name, None)
+            if df is not None:
+                mlflow.log_metric(f"raw.{name}_rows", int(len(df)))
+                mlflow.log_metric(f"raw.{name}_cols", int(df.shape[1]))
+
+        logger.info('Starting data cleaning.')
+        clean_data = processor.clean_data()
+
+        # If cleaner returned None, likely needs manual follow-up
+        if clean_data is None:
+            mlflow.set_tag("status", "needs_manual_input")
+            logger.warning("Cleaning returned None — likely needs manual follow-up (alt spellings or unknown sex).")
+            return
+
+        logger.info('Storing cleaned data')
         clean_data_path = processor.interim_data_path / "clean_ufcstats-com_data.csv"
         if new_fights_only:
             clean_data_old = open_csv(clean_data_path)
             clean_data = pd.concat([clean_data, clean_data_old])
-            clean_data = clean_data.drop_duplicates() 
+            clean_data = clean_data.drop_duplicates()
             clean_data.reset_index(drop=True, inplace=True)
         clean_data.sort_values(by=['tau','name f1'], inplace=True)
-        clean_data.reset_index(drop=True) 
+        clean_data.reset_index(drop=True)
         store_csv(clean_data, processor.interim_data_path / "clean_ufcstats-com_data.csv")
-        
+
+        # Log cleaned data metrics  
+        mlflow.log_metrics({
+            "cleaned.total_rows": int(len(clean_data)),
+            "cleaned.total_cols": int(clean_data.shape[1]),
+            "cleaned.nan_rate": float(clean_data.isna().mean().mean()),
+            "cleaned.unique_fighters": int(
+                pd.concat([clean_data['name f1'], clean_data['name f2']]).nunique()
+            ),
+            "cleaned.date_range_weeks": int(clean_data['tau'].max() - clean_data['tau'].min()),
+        })
+
+        # Result distribution
+        if 'result' in clean_data.columns:
+            result_counts = clean_data['result'].value_counts().to_dict()
+            for result_class, count in result_counts.items():
+                mlflow.log_metric(f"cleaned.result_class_{result_class}", int(count))
+
+        # Log output artifacts
+        try:
+            mlflow.log_artifact(str(clean_data_path))
+            
+            # Log helpful interim artifacts when present
+            alt_path = processor.interim_data_path / 'alternative_spellings_internal.csv'
+            if alt_path.exists():
+                mlflow.log_artifact(str(alt_path))
+
+            unknown_sex_csv = processor.interim_data_path / 'unknown_sex.csv'
+            if unknown_sex_csv.exists():
+                mlflow.log_artifact(str(unknown_sex_csv))
+
+            tott_clean = processor.interim_data_path / 'ufc_fighter_tott_clean.csv'
+            if tott_clean.exists():
+                mlflow.log_artifact(str(tott_clean))
+        except Exception as e:
+            logger.warning(f"Could not log artifacts: {e}")
+
+        mlflow.set_tag("status", "completed")
         logger.info("UFC data processing pipeline completed successfully")
-        
+
     except Exception as e:
+        mlflow.set_tag("status", "failed")
+        mlflow.set_tag("error_message", str(e))
+        try:
+            err_file = processor.interim_data_path / "clean_raw_data_error.txt"
+            err_file.write_text(str(e), encoding="utf-8")
+            mlflow.log_artifact(str(err_file))
+        except Exception:
+            pass
         logger.error(f"Data processing pipeline failed: {e}")
         raise
 

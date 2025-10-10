@@ -8,12 +8,15 @@ This is a standalone script with no external config.
 import csv
 import re
 from pathlib import Path
+from loguru import logger 
 
 import requests
 from bs4 import BeautifulSoup
 
+from src.utils.general import get_data_path 
+
 UPCOMING_EVENTS_URL = 'http://ufcstats.com/statistics/events/upcoming'
-OUTPUT_CSV = Path('upcoming_event_fights.csv')
+OUTPUT_CSV = get_data_path('raw') / 'pred_raw.csv' 
 
 
 def get_soup(url: str) -> BeautifulSoup:
@@ -35,6 +38,7 @@ def get_first_upcoming_event_url() -> str | None:
         href = a.get('href') or ''
         if '/event-details/' in href:
             return href
+        
     return None
 
 
@@ -113,7 +117,6 @@ def get_upcoming_bouts_with_meta():
 
     return event_url, event_date, bouts
 
-
 def scrape_pred():
     _, _, bouts = get_upcoming_bouts_with_meta()
 
@@ -130,5 +133,5 @@ def scrape_pred():
     print(f'Wrote {len(bouts)} rows to {OUTPUT_CSV.resolve()}')
 
 
-if __name__ == '__main__':
-    main()
+if __name__ == '__main__':  
+    scrape_pred()
