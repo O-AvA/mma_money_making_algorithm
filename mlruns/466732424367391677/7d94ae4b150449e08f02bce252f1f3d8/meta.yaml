@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/OAVAI/Desktop/mma%20-%20Copy/mma_light/mlruns/466732424367391677/7d94ae4b150449e08f02bce252f1f3d8/artifacts
+end_time: 1760444954086
+entry_point_name: ''
+experiment_id: '466732424367391677'
+lifecycle_stage: active
+run_id: 7d94ae4b150449e08f02bce252f1f3d8
+run_name: mma_prediction_svd_20251014_131115
+run_uuid: 7d94ae4b150449e08f02bce252f1f3d8
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760440275949
+status: 3
+tags: []
+user_id: OAVAI

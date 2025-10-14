@@ -152,7 +152,8 @@ class CVMain:
 
     def predict(
             self, 
-            top_idx = 0
+            top_idx = 0,
+            rndstate_stability_check = True
     ):
         """
         Makes predictions and measures calibration.
@@ -163,6 +164,10 @@ class CVMain:
                 n_repeats x n_folds samples.
             top_idx:
                 Which row to pick from the output metrics file.
+            rndstate_stability_check bool: 
+                During HPO and FS, xgb random state is fixed. Therefore, 
+                before predicting, first do a stability check on the top_n best 
+                metrics and predict on the best one
 
         Returns:
             Writes the following files:
@@ -179,14 +184,20 @@ class CVMain:
 
         # Retrieve best hyperparameters and (optionally) number of features
         # from the stored metrics.
-        metrics = open_csv(self.metrics_path).iloc[top_idx]
+        if rndstate_stability_check: 
+            top_n = 5
+            n_repeats = 3
+            self._xgb_seed_stability_check(top_n=top_n, n_repeats=n_repeats)
+            metrics_path = str(self.metrics_path).replace('.csv', '_rndstate_stability_check.csv')
+        else:
+            metrics_path = self.metrics_path
+        metrics = open_csv(metrics_path).iloc[top_idx]
         params = {k: metrics.get(k) for k in self.hyper_params.keys()}
         params['top_k_feats'] = metrics.get('top_k_feats')
 
         n_repeats = self.cv_params['n_repeats']
 
         # Reload train to get folds and prediction matrices
-        DataLoader(self)._load_pred()
         #if not hasattr(self, 'folds'):
         DataLoader(self)._load_train()
         folds_list = self.folds
@@ -216,7 +227,9 @@ class CVMain:
             for j in range(self.cv_params['n_folds']):
                 self.folds = [[folds[j]]]
                 # Suppress MLflow param logging during prediction loops
-                model = self._cross_validate(params, mlflow_prefix=None)
+
+                xgb_seed = np.random.randint(0,10e6)
+                model = self._cross_validate(params, xgb_seeds=[xgb_seed], mlflow_prefix=None)
 
 
                 # We have to reload Xv because _cross_validation changes columns 
@@ -279,9 +292,78 @@ class CVMain:
             FS(self)._select_features(params)
 
         #self.pipeline_stage = 2
+
+    def _xgb_seed_stability_check(self, top_n = 5, n_repeats=2):
+        """
+        HPO and feature selection will all be done on the same xgb_seed. 
+        Therefore, before making predictions, it may be worthwhile 
+        checking stability on xgb_seed. 
+
+        It will take the top_n best metrics and tests them and then uses 
+        the best one for making predictions.
+
+        Args
+            top_n int: 
+                Do stability check for the top_n best metrics and pick 
+                the best one 
+            n_repeats int: 
+                Overrides self.cv_params['n_repeats'] 
+        """
+        xgb_seeds = np.random.randint(0,10000,size=n_repeats*self.cv_params['n_folds'])
+
+        # Saving current n_repeats and setting to custom one
+        og_n_repeats = self.cv_params['n_repeats'] 
+        CVparams(self).change_cv_param('n_repeats', n_repeats)
+
+        # Reload X to get folds corresponding to new n_repeats
+        DataLoader(self)._load_train()
+        if not hasattr(self, 'Xvt'):
+            DataLoader(self)._load_valid()
+
+        logger.info(f'Checking xgb random_state stability.')
+
+        ssc_metrics_path = str(self.metrics_path).replace('.csv', '_rndstate_stability_check.csv')
+        df_ssc = creaopen_file(ssc_metrics_path)
+
+        for j in range(top_n):
+            dfm = open_csv(self.metrics_path)
+            metrics = dfm.iloc[j]
+            params = {k: metrics.get(k) for k in self.hyper_params.keys()}
+            params['top_k_feats'] = metrics.get('top_k_feats')
+
+            new_metrics = self._cross_validate(params, xgb_seeds=xgb_seeds) 
+            new_metrics = {k + ' seed_avg': v for k, v in new_metrics.items()}
+            new_metrics = {k: metrics.get(k) for k in dfm.columns} | new_metrics
+            new_metrics = {'rnd state samples': n_repeats * self.cv_params['n_folds']} | new_metrics
+            new_metrics = pd.DataFrame({k: [v] for k, v in new_metrics.items()})
+
+            df_ssc = pd.concat([df_ssc, new_metrics])  
+            logloss = 'll7_tv seed_avg' if self.valid_params['vv_size'] == 0 else 'll7_vt seed_avg' 
+            f1score = 'f1macro7_tv seed_avg' if self.valid_params['vv_size'] == 0 else 'f1macro7_vt seed_avg' 
+            df_ssc = df_ssc.sort_values(by=[logloss, f1score], 
+                                  ascending=[True, False]
+            ) 
+            store_csv(df_ssc, ssc_metrics_path)
+
+            logger.info(f'Checked stability for {j+1}/{top_n} metrics')
+            logger.info(f'Difference logloss 7 valid_train: {new_metrics["ll7_tv"]-new_metrics["ll7_tv seed_avg"]}')
+            logger.info(f'Difference logloss 2 valid_train: {new_metrics["ll2_tv"]-new_metrics["ll2_tv seed_avg"]}')
+
+
+
+
+        # Change back to original n_repeats
+        CVparams(self).change_cv_param('n_repeats', og_n_repeats)
+
+
+        
+
+
+
+
          
         
-    def _cross_validate(self, hyperparams, mlflow_prefix="model"):
+    def _cross_validate(self, hyperparams, xgb_seeds = None, mlflow_prefix="model"):
         params = hyperparams.copy() 
 
         Xt, yt = self.Xt, self.yt 
@@ -303,7 +385,7 @@ class CVMain:
                 logger.info(f'Selected {len(features)} that were chosen {top_k} times or more.')
             else: # self.feature_params['select_by'] == 'index':
                 top_k = int(top_k) if isinstance(top_k, str) else top_k
-                features = df_ff.iloc[:top_k]['feature'].values
+                features = df_ff.iloc[:int(top_k)]['feature'].values
                 logger.info(f'Selected top {top_k} features for CV: {len(features)}')
             Xt = Xt[features] 
         Xvt, yvt = self.Xvt[Xt.columns], self.yvt
@@ -315,14 +397,15 @@ class CVMain:
             self.Xvv = Xvv
             self.Xvt = Xvt
 
-
-        model = self._xgb_factory(params)
         n_repeats = self.cv_params['n_repeats'] 
         n_folds = self.cv_params['n_folds'] 
         
         tv_metrics_list = []
         vv_metrics_list = []
         vt_metrics_list = [] 
+
+        # Used for HPO and FS
+        xgb_seed = 42
 
         if not hasattr(self, 'Xp'): 
             log_params = {
@@ -336,6 +419,10 @@ class CVMain:
             for k, (train_idx, val_idx) in enumerate(all_folds[j]): 
                 Xtt, Xtv = Xt.iloc[train_idx], Xt.iloc[val_idx]
                 ytt, ytv = yt.iloc[train_idx], yt.iloc[val_idx]
+
+    
+                xgb_seed = xgb_seeds[j*n_repeats + k] if xgb_seeds is not None else xgb_seed 
+                model = self._xgb_factory(params, xgb_seed=xgb_seed)
 
                 model.fit(Xtt, ytt, eval_set=[(Xtv, ytv)], verbose=False)
 
@@ -390,18 +477,22 @@ class CVMain:
         
         params['top_k_feats'] = 'All' if not hasattr(self,'feature_params') else top_k 
         params['n_features'] = f'All ({len(Xt.columns)})' if not hasattr(self,'feature_params') else len(features)
-        model_d = {'suffix': self.suffix} 
-        output_d = model_d | self.valid_params | params 
+        valid_fraction = (len(self.Xvt) + self.valid_params['vv_size']) / (len(self.Xvt) + self.valid_params['vv_size'] + len(self.Xt)) 
+        model_d = {'suffix': self.suffix, 'valid_size': valid_fraction}
+        output_d = model_d | self.cv_params | self.valid_params | params 
         metrics_d = metrics['train_valid'] | metrics['valid_train'] | metrics['valid_valid'] 
+        if xgb_seeds is not None: # and self.Xp is None: 
+            # This is for the seed stability check pipeline
+            return metrics_d
         output_d = output_d | metrics_d 
-        output_d = {k: [v] for k, v in output_d.items()} 
+        output_d = {k: [v] for k, v in output_d.items()}
         dfm = creaopen_file(self.metrics_path)
         dfm = pd.concat([dfm, pd.DataFrame(output_d)])
         logloss = 'll7_tv' if self.valid_params['vv_size'] == 0 else 'll7_vt' 
         f1score = 'f1macro7_tv' if self.valid_params['vv_size'] == 0 else 'f1macro7_vt' 
         dfm = dfm.sort_values(by=[logloss, f1score], 
                               ascending=[True, False]
-        ) 
+        )
         store_csv(dfm, self.metrics_path)
 
         time.sleep(2.5) 
@@ -482,14 +573,16 @@ class CVMain:
         return {"ll7": ll_7, "f1macro7": f1_7, "acc7": acc_7, 
                   "ll2": ll_2, "f1macro2": f1_2, "acc2": acc_2}
 
-    def _xgb_factory(self, params, xgb_seed=69): 
+    def _xgb_factory(self, params, xgb_seed): 
         base = dict(
             objective="multi:softprob",
-            num_class=7, 
+            num_class=7,
+            n_jobs=1,
             early_stopping_rounds=25,
             eval_metric="mlogloss",
             use_label_encoder=False,
             verbosity=0,
+            tree_method="hist",
             random_state=xgb_seed
         )
         base.update(params)

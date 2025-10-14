@@ -38,7 +38,7 @@ def run_full_pipeline(skip_data_cleaning=False, skip_feature_engineering=False):
     }
     
     # Pipeline parameters
-    suffix = 'natty'
+    suffix = 'svd'
     last_years = 3
     sample_size = 0.1
     if_on_size_then_randomly = False
@@ -83,12 +83,12 @@ def run_full_pipeline(skip_data_cleaning=False, skip_feature_engineering=False):
                         sample_size=sample_size, 
                         if_on_size_then_randomly = if_on_size_then_randomly
                 ) 
-                TVP.construct_pred(scrape_and_clean=True)
+                #TVP.construct_pred(scrape_and_clean=True)
 
                 if suffix == 'symm':
                     TVP.symmetrize(for_svd=False)
                 elif suffix == 'svd':
-                    TVP.do_svd(k=204)
+                    TVP.do_svd(k=75)
                 elif suffix == 'natty': 
                     TVP.go_natty() 
         else:
@@ -132,10 +132,10 @@ def run_full_pipeline(skip_data_cleaning=False, skip_feature_engineering=False):
             CV.set_hyper_params(hyper_params)
 
             # Hyperparameter optimization → Feature selection → Final predictions
-            #CV.optimize(n_trials=40) 
+            CV.optimize(n_trials=25) 
        
             CV.change_cv_param('n_repeats', 3) 
-            #CV.select_features()
+            CV.select_features()
 
             # Re-training and also varying over the most important features 
             select_by = 'frequency'   # by index or frequency
@@ -152,10 +152,10 @@ def run_full_pipeline(skip_data_cleaning=False, skip_feature_engineering=False):
                     feature_range = feature_range
             ) 
 
-            #CV.change_cv_param('n_repeats', 1) 
-            #CV.optimize(n_trials=40) 
+            CV.change_cv_param('n_repeats', 1) 
+            CV.optimize(n_trials=25) 
 
-            CV.change_cv_param('n_repeats', 50)
+            CV.change_cv_param('n_repeats', 60)
             CV.predict()
 
 

@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/OAVAI/Desktop/mma%20-%20Copy/mma_light/mlruns/466732424367391677/41eadc82f2b9446dbd97ff3d445208c3/artifacts
+end_time: 1760440164544
+entry_point_name: ''
+experiment_id: '466732424367391677'
+lifecycle_stage: active
+run_id: 41eadc82f2b9446dbd97ff3d445208c3
+run_name: model_training_130917
+run_uuid: 41eadc82f2b9446dbd97ff3d445208c3
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760440157081
+status: 3
+tags: []
+user_id: OAVAI

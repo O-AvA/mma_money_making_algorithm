@@ -1,0 +1,15 @@
+artifact_uri: file:///C:/Users/OAVAI/Desktop/mma%20-%20Copy/mma_light/mlruns/466732424367391677/a3dbde14df05429d8829dc0c72049239/artifacts
+end_time: 1760441129740
+entry_point_name: ''
+experiment_id: '466732424367391677'
+lifecycle_stage: active
+run_id: a3dbde14df05429d8829dc0c72049239
+run_name: hyperparameter_optimization_131123
+run_uuid: a3dbde14df05429d8829dc0c72049239
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760440283027
+status: 3
+tags: []
+user_id: OAVAI
