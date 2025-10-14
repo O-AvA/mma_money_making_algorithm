@@ -116,12 +116,12 @@ def run_full_pipeline(skip_data_cleaning=False, skip_feature_engineering=False):
                 'fold_seed': 42
             }
             hyper_params = {
-                "max_depth": (5,6),
-                "learning_rate": (0.02, 0.05),
-                "n_estimators": (400,700),
+                "max_depth": (2,6),
+                "learning_rate": (0.02, 0.07),
+                "n_estimators": (100,700),
                 "min_child_weight": (0, 25),
-                "gamma": (1, 3),
-                "subsample": (0.5,0.9),
+                "gamma": (1, 10),
+                "subsample": (0.7,0.9),
                 "colsample_bytree": 1,
                 # Optional regularization
                 "reg_alpha": 0.0,
@@ -132,10 +132,10 @@ def run_full_pipeline(skip_data_cleaning=False, skip_feature_engineering=False):
             CV.set_hyper_params(hyper_params)
 
             # Hyperparameter optimization → Feature selection → Final predictions
-            CV.optimize(n_trials=40) 
+            #CV.optimize(n_trials=40) 
        
             CV.change_cv_param('n_repeats', 3) 
-            CV.select_features()
+            #CV.select_features()
 
             # Re-training and also varying over the most important features 
             select_by = 'frequency'   # by index or frequency
@@ -143,7 +143,7 @@ def run_full_pipeline(skip_data_cleaning=False, skip_feature_engineering=False):
             if select_by == 'frequency': 
                 max_freq = CV.cv_params['n_repeats'] * CV.cv_params['n_folds'] 
                 #feature_range = (max(max_freq-2, 1), max_freq)
-                feature_range = (12, 15) 
+                feature_range = (11, 15) 
             elif select_by == 'index': 
                 max_index = len(CV.Xt.columns)
                 feature_range = (50, max_index - 50) 
@@ -152,10 +152,10 @@ def run_full_pipeline(skip_data_cleaning=False, skip_feature_engineering=False):
                     feature_range = feature_range
             ) 
 
-            CV.change_cv_param('n_repeats', 1) 
-            CV.optimize(n_trials=40) 
+            #CV.change_cv_param('n_repeats', 1) 
+            #CV.optimize(n_trials=40) 
 
-            CV.change_cv_params('n_repeats', 200)
+            CV.change_cv_param('n_repeats', 50)
             CV.predict()
 
 
