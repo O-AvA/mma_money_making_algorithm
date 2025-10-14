@@ -1,27 +1,27 @@
 upp_low,temp_f_id,name f1,name f2,tau
-0,0,Bia Mesquita,Irina Alekseeva,1275
-0,1,Charles Oliveira,Mateusz Gamrot,1275
-1,3,Clayton Carpenter,Jafel Filho,1275
-0,2,Deiveson Figueiredo,Montel Jackson,1275
-1,0,Irina Alekseeva,Bia Mesquita,1275
-0,3,Jafel Filho,Clayton Carpenter,1275
-0,4,Jhonata Diniz,Mario Pinto,1275
-1,11,Joel Alvarez,Vicente Luque,1275
-0,5,Julia Polastri,Karolina Kowalkiewicz,1275
-1,9,Kaan Ofli,Ricardo Ramos,1275
-1,5,Karolina Kowalkiewicz,Julia Polastri,1275
-0,6,Luan Lacerda,Saimon Oliveira,1275
-0,7,Lucas Almeida,Michael Aswell,1275
-0,8,Lucas Rocha,Stewart Nicoll,1275
-1,4,Mario Pinto,Jhonata Diniz,1275
-1,1,Mateusz Gamrot,Charles Oliveira,1275
-1,7,Michael Aswell,Lucas Almeida,1275
-1,10,Mohammed Usman,Valter Walker,1275
-1,2,Montel Jackson,Deiveson Figueiredo,1275
-0,9,Ricardo Ramos,Kaan Ofli,1275
-1,6,Saimon Oliveira,Luan Lacerda,1275
-1,8,Stewart Nicoll,Lucas Rocha,1275
-1,12,Thomas Petersen,Vitor Petrino,1275
-0,10,Valter Walker,Mohammed Usman,1275
-0,11,Vicente Luque,Joel Alvarez,1275
-0,12,Vitor Petrino,Thomas Petersen,1275
+1,9,Aiemann Zahabi,Marlon Vera,1276
+1,3,Aoriqileng,Cody Gibson,1276
+0,0,Azamat Bekoev,Yousri Belgaroui,1276
+1,11,Brendan Allen,Reinier de Ridder,1276
+0,1,Bruno Fly Silva,HyunSung Park,1276
+0,2,Charles Jourdain,Davey Grant,1276
+0,3,Cody Gibson,Aoriqileng,1276
+0,4,Danny Barlow,Djorden Santos,1276
+1,2,Davey Grant,Charles Jourdain,1276
+1,4,Djorden Santos,Danny Barlow,1276
+1,7,Drew Dober,Kyle Prepolec,1276
+1,1,HyunSung Park,Bruno Fly Silva,1276
+1,8,Jasmine Jasudavicius,Manon Fiorot,1276
+0,5,Kevin Holland,Mike Malott,1276
+0,6,Kyle Nelson,Matt Frevola,1276
+0,7,Kyle Prepolec,Drew Dober,1276
+0,8,Manon Fiorot,Jasmine Jasudavicius,1276
+0,9,Marlon Vera,Aiemann Zahabi,1276
+1,6,Matt Frevola,Kyle Nelson,1276
+0,10,Melissa Croden,Tainara Lisboa,1276
+1,5,Mike Malott,Kevin Holland,1276
+1,12,Ravena Oliveira,Stephanie Luciano,1276
+0,11,Reinier de Ridder,Brendan Allen,1276
+0,12,Stephanie Luciano,Ravena Oliveira,1276
+1,10,Tainara Lisboa,Melissa Croden,1276
+1,0,Yousri Belgaroui,Azamat Bekoev,1276
