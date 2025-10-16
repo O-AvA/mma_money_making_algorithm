@@ -39,8 +39,7 @@ class FeatureSelector:
         suffix = self.CVmain.suffix
         all_folds = self.CVmain.folds
 
-        # Model factory and base params (centered on your prior choices)
-        model = self.CVmain._xgb_factory(params)  
+        model = self.CVmain._xgb_factory(params, xgb_seed = self.CVmain.xgb_seed)
 
         counts = np.zeros(n_features, dtype=int)
         imp_sum = np.zeros(n_features, dtype=float)

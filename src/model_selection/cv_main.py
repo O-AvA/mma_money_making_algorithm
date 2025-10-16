@@ -71,7 +71,11 @@ class CVMain:
         self.set_cv_params = CVparams(self).set_cv_params
         self.set_feature_params = CVparams(self).set_feature_params
         self.set_hyper_params = CVparams(self).set_hyper_params
+        self.set_stability_check_params = CVparams(self).set_stability_check_params 
+
         self.change_cv_param = CVparams(self).change_cv_param
+
+        self.xgb_seed = 2025
    
     def optimize(
             self, 
@@ -168,6 +172,10 @@ class CVMain:
                 During HPO and FS, xgb random state is fixed. Therefore, 
                 before predicting, first do a stability check on the top_n best 
                 metrics and predict on the best one
+            rndstate_stability_check bool: 
+                During HPO, xgb random state is fixed. Therefore, 
+                before predicting, first do a stability check on the top_n best 
+                metrics and predict on the best one
 
         Returns:
             Writes the following files:
@@ -181,14 +189,26 @@ class CVMain:
             rows = (n_rows_in_X) * 7, flattened row-major (for each row, classes 0..6),
             cols = number of model samples produced.
         """
-
         # Retrieve best hyperparameters and (optionally) number of features
         # from the stored metrics.
         if rndstate_stability_check: 
-            top_n = 5
-            n_repeats = 3
-            self._xgb_seed_stability_check(top_n=top_n, n_repeats=n_repeats)
-            metrics_path = str(self.metrics_path).replace('.csv', '_rndstate_stability_check.csv')
+            top_n = self.stability_check_params['top_n'] 
+            n_repeats = self.stability_check_params['n_repeats']
+            # If running under MLflow pipeline, wrap stability check as its own substage
+            pipeline_manager = get_pipeline_manager()
+            in_pipeline = pipeline_manager is not None
+            ssc_metrics_path = str(self.metrics_path).replace('.csv', '_rndstate_stability_check.csv')
+            if in_pipeline:
+                with substage_run("rndstate_stability_check", top_n=top_n, n_repeats=n_repeats):
+                    self._xgb_seed_stability_check()#top_n=top_n, n_repeats=n_repeats)
+                    # Log the stability-check CSV if present
+                    try:
+                        pipeline_manager.log_data_artifact(ssc_metrics_path, artifact_type="stability")
+                    except Exception:
+                        pass
+            else:
+                self._xgb_seed_stability_check(top_n=top_n, n_repeats=n_repeats)
+            metrics_path = ssc_metrics_path
         else:
             metrics_path = self.metrics_path
         metrics = open_csv(metrics_path).iloc[top_idx]
@@ -222,15 +242,26 @@ class CVMain:
 
         logger.info('Starting CV for making predictions.')
 
+        og_ss = params['subsample']
+        og_cst = params['colsample_bytree']
+        var_range = 0.05
+
+        #ss_range = (min(0, og_ss-var_range), min(og_ss+var_range,1))
+        #cst_range = (min(0, og_cst-var_range), min(og_cst+var_range,1))
+
         for k, folds in enumerate(folds_list):
             self.folds = [folds]
             for j in range(self.cv_params['n_folds']):
                 self.folds = [[folds[j]]]
-                # Suppress MLflow param logging during prediction loops
+
+                #params['subsample'] = np.round(np.random.uniform(ss_range[0], ss_range[1]), 5) 
+                #params['colsample_bytree'] = np.round(np.random.uniform(cst_range[0], cst_range[1]), 5)
+                # Varying over subsample and colsample_bytree
+                params['subsample'] = max(0, min(np.random.normal(og_ss, var_range), 1))
+                params['colsample_bytree'] = max(0, min(np.random.normal(og_cst, var_range), 1))
 
                 xgb_seed = np.random.randint(0,10e6)
                 model = self._cross_validate(params, xgb_seeds=[xgb_seed], mlflow_prefix=None)
-
 
                 # We have to reload Xv because _cross_validation changes columns 
                 Xv = self.Xvt if self.valid_params['vv_size'] == 0 else self.Xvv
@@ -272,8 +303,39 @@ class CVMain:
         #PrPr(self)._save_probas(v_probs7, save_as_n_classes=2, ytrue=yv)
         #PrPr(self)._save_probas(p_probs7, save_as_n_classes=2)
 
-    def select_features(self, top_idx = 0): 
-        metrics = open_csv(self.metrics_path).iloc[top_idx] 
+    def select_features(self, rndstate_stability_check=True,top_idx = 0): 
+        """
+        Performs feature selection, ranks columns by their importance
+
+        Args: 
+            rndstate_stability_check bool: 
+                During HPO, xgb random state is fixed. Therefore, 
+                before predicting, first do a stability check on the top_n best 
+                metrics and predict on the best one
+            topValidation set 
+                Chose the hyperparams with top_idx'th best metrics 
+        """
+        if rndstate_stability_check: 
+            top_n = self.stability_check_params['top_n'] 
+            n_repeats = self.stability_check_params['n_repeats']
+            # If running under MLflow pipeline, wrap stability check as its own substage
+            pipeline_manager = get_pipeline_manager()
+            in_pipeline = pipeline_manager is not None
+            ssc_metrics_path = str(self.metrics_path).replace('.csv', '_rndstate_stability_check.csv')
+            if in_pipeline:
+                with substage_run("rndstate_stability_check", top_n=top_n, n_repeats=n_repeats):
+                    self._xgb_seed_stability_check()#top_n=top_n, n_repeats=n_repeats)
+                    # Log the stability-check CSV if present
+                    try:
+                        pipeline_manager.log_data_artifact(ssc_metrics_path, artifact_type="stability")
+                    except Exception:
+                        pass
+            else:
+                self._xgb_seed_stability_check(top_n=top_n, n_repeats=n_repeats)
+            metrics_path = ssc_metrics_path
+        else:
+            metrics_path = self.metrics_path
+        metrics = open_csv(metrics_path).iloc[top_idx] 
         params = {k: metrics.get(k) for k in self.hyper_params.keys()} 
         log_params = {
             k: round(v, 2) if isinstance(v, float) else v
@@ -293,7 +355,7 @@ class CVMain:
 
         #self.pipeline_stage = 2
 
-    def _xgb_seed_stability_check(self, top_n = 5, n_repeats=2):
+    def _xgb_seed_stability_check(self): #, top_n = 5, n_repeats=2):
         """
         HPO and feature selection will all be done on the same xgb_seed. 
         Therefore, before making predictions, it may be worthwhile 
@@ -309,6 +371,12 @@ class CVMain:
             n_repeats int: 
                 Overrides self.cv_params['n_repeats'] 
         """
+        if not hasattr(self, 'stability_check_params'):
+            CVparams(self).set_stability_check_params()
+
+        top_n = self.stability_check_params['top_n']
+        n_repeats = self.stability_check_params['n_repeats']
+
         xgb_seeds = np.random.randint(0,10000,size=n_repeats*self.cv_params['n_folds'])
 
         # Saving current n_repeats and setting to custom one
@@ -329,7 +397,11 @@ class CVMain:
             dfm = open_csv(self.metrics_path)
             metrics = dfm.iloc[j]
             params = {k: metrics.get(k) for k in self.hyper_params.keys()}
-            params['top_k_feats'] = metrics.get('top_k_feats')
+            if 'All' not in metrics.get('top_k_feats'):
+                params['top_k_feats'] = metrics.get('top_k_feats')
+            else: 
+                params['top_k_feats'] = len(self.Xt.columns)
+
 
             new_metrics = self._cross_validate(params, xgb_seeds=xgb_seeds) 
             new_metrics = {k + ' seed_avg': v for k, v in new_metrics.items()}
@@ -346,8 +418,29 @@ class CVMain:
             store_csv(df_ssc, ssc_metrics_path)
 
             logger.info(f'Checked stability for {j+1}/{top_n} metrics')
-            logger.info(f'Difference logloss 7 valid_train: {new_metrics["ll7_tv"]-new_metrics["ll7_tv seed_avg"]}')
-            logger.info(f'Difference logloss 2 valid_train: {new_metrics["ll2_tv"]-new_metrics["ll2_tv seed_avg"]}')
+            try:
+                row = new_metrics.iloc[0]
+                if "ll7_tv" in row and "ll7_tv seed_avg" in row:
+                    logger.info(f'Difference logloss 7 valid_train: {float(row["ll7_tv"]) - float(row["ll7_tv seed_avg"]) }')
+                if "ll2_tv" in row and "ll2_tv seed_avg" in row:
+                    logger.info(f'Difference logloss 2 valid_train: {float(row["ll2_tv"]) - float(row["ll2_tv seed_avg"]) }')
+            except Exception:
+                pass
+
+            # When running inside MLflow, log per-candidate deltas for visibility
+            pipeline_manager = get_pipeline_manager()
+            if pipeline_manager is not None:
+                try:
+                    row = new_metrics.iloc[0]
+                    metrics_payload = {}
+                    if "ll7_tv" in row and "ll7_tv seed_avg" in row:
+                        metrics_payload["ll7_tv_delta"] = float(row["ll7_tv"]) - float(row["ll7_tv seed_avg"]) 
+                    if "ll2_tv" in row and "ll2_tv seed_avg" in row:
+                        metrics_payload["ll2_tv_delta"] = float(row["ll2_tv"]) - float(row["ll2_tv seed_avg"]) 
+                    if metrics_payload:
+                        pipeline_manager.log_metrics_safe(metrics_payload, prefix="stability_check", step=j)
+                except Exception:
+                    pass
 
 
 
@@ -356,13 +449,7 @@ class CVMain:
         CVparams(self).change_cv_param('n_repeats', og_n_repeats)
 
 
-        
 
-
-
-
-         
-        
     def _cross_validate(self, hyperparams, xgb_seeds = None, mlflow_prefix="model"):
         params = hyperparams.copy() 
 
@@ -404,12 +491,11 @@ class CVMain:
         vv_metrics_list = []
         vt_metrics_list = [] 
 
-        # Used for HPO and FS
-        xgb_seed = 42
+        xgb_seed = self.xgb_seed
 
         if not hasattr(self, 'Xp'): 
             log_params = {
-                k: round(v, 2) if isinstance(v, float) else v
+                k: round(v, 4) if isinstance(v, float) else v
                 for k, v in hyperparams.items()
             }
 
@@ -421,7 +507,7 @@ class CVMain:
                 ytt, ytv = yt.iloc[train_idx], yt.iloc[val_idx]
 
     
-                xgb_seed = xgb_seeds[j*n_repeats + k] if xgb_seeds is not None else xgb_seed 
+                xgb_seed = xgb_seeds[j*n_folds + k] if xgb_seeds is not None else xgb_seed
                 model = self._xgb_factory(params, xgb_seed=xgb_seed)
 
                 model.fit(Xtt, ytt, eval_set=[(Xtv, ytv)], verbose=False)
@@ -450,7 +536,7 @@ class CVMain:
             if not metrics_seq:
                 return {}
             keys = metrics_seq[0].keys()
-            return {f'{k}_{label}': round(float(np.mean([m[k] for m in metrics_seq])),4) for k in keys}
+            return {f'{k}_{label}': round(float(np.mean([m[k] for m in metrics_seq])),8) for k in keys}
 
         metrics = {
             "train_valid": _avg(tv_metrics_list, 'tv'),
@@ -460,7 +546,7 @@ class CVMain:
 
         logger.info(f'Accuracy on valid_train: {metrics["valid_train"]["acc2_vt"]}')
 
-        # Log aggregated CV metrics to MLflow when available
+        # Validation set parameters CV metrics to MLflow when available
         pipeline_manager = get_pipeline_manager()
         if pipeline_manager is not None:
             try:
@@ -512,7 +598,30 @@ class CVMain:
         if hasattr(self, 'feature_params'): 
             #CVparams(self).set_feature_params() 
             hyper_params['top_k_feats'] = self.feature_params['feature_range']
-            logger.info(f'Optuna study also varies over most important features.')
+            logger.info(f'Found attribute "feature_params". Assuming re-training with reduced features.') 
+
+            top_n_trials = 10
+            dfm = open_csv(self.metrics_path).iloc[:top_n_trials]
+            for k in hyper_params.keys():
+                if k == 'top_k_feats': 
+                    # At this point only full feature model has been considered
+                    # and top_k features are selected manually. 
+                    continue 
+
+                min_prm = 0.8*dfm[k].min() 
+                max_prm = 1.2*dfm[k].max()
+                max_prm = min(max_prm, 1) if k in ['subsample', 'colsample_bytree'] else max_prm
+
+                int_params = ['n_estimators','top_k_feats','max_depth'] 
+                #float_params = [k for k in hyper_params.keys() if k not in int_params] 
+                min_prm = round(min_prm) if k in int_params else float(min_prm) 
+                max_prm = round(max_prm) if k in int_params else float(max_prm) 
+
+                if min_prm != max_prm: 
+                    hyper_params[k] = (min_prm, max_prm)
+                else: 
+                    hyper_params[k] = min_prm 
+                    
         for k, v in hyper_params.items(): 
             if isinstance(v, float) or isinstance(v, int): 
                 param_ranges[k] = v 
@@ -577,7 +686,7 @@ class CVMain:
         base = dict(
             objective="multi:softprob",
             num_class=7,
-            n_jobs=1,
+            n_jobs=-2,
             early_stopping_rounds=25,
             eval_metric="mlogloss",
             use_label_encoder=False,

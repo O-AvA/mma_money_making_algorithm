@@ -109,6 +109,21 @@ class CVParams():
         } if params_dict is None else params_dict 
 
 
+    def set_stability_check_params(
+            self, 
+            params_dict = None, 
+            top_n = 5,
+            n_repeats = 3
+    ):
+        """
+        Params for xgb random_state seed stability check. Perform 
+        n_repeats for the top_n best hyper params. 
+        """
+        self.CVmain.stability_check_params = { 
+            'top_n': top_n,
+            'n_repeats': n_repeats
+        } if params_dict is None else params_dict 
+
 
     def change_cv_param(self, key, new_val):
         """

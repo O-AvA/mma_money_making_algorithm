@@ -214,7 +214,6 @@ elif suffix == 'natty':
 ### 4.1 Hyperparameter optimization (Optuna)
 
 ```python
-
 suffix = 'symm'
 CV = CrossValidationMain('symm') 
 
@@ -247,17 +246,24 @@ CV.set_cv_params(cv_params)
 CV.set_hyper_params(hyper_params)
 
 # Initial training 
-CV.optimize(n_trials = 50) 
-
+CV.optimize(n_trials = 50)
 ```
 
 ### 4.2 Feature selection and re-training 
 
 + The following code snippet automatically selects the best hyperparameters from the output metrics file and starts feature selection. It outputs file `output/feature_selection/feature_frequency`.
 + After ranking all features by their importance and counting how many times they it starts optimizing hyperparameters again but this time also varying over a range of the k_selected-th most important features.
++ Because during HPO xgb random_state is fixed, we can set `rndstate_stability_check=True` to measure the stability of the model over different seeds. It will take the `top_n` parameter combinations with the best metrics and does `n_repeats` of cross validation, where inside each fold a different random seed is chosen. The seeds-averaged metrics will be stored in `data/output/metrics/{suffix}_stability_check.csv` and the best ones are automatically retrieved for further feature selection.
 
 ```python
-CV.select_features() 
+# Optionally, change default stability check params 
+stability_check_params = {
+    'top_n': 1, 
+    'n_repeats': 2
+}
+CV.set_stability_check_params(stability_check_params)
+
+CV.select_features(rnd_state_stability_check = True)
 
 select_by = 'frequency'   # or by index 
 
@@ -272,22 +278,20 @@ CV.set_feature_params(
     feature_range = feature_range
 ) 
 
-from src.model_selection.CVmain import CVmain 
-CV = CVmain(suffix)
-CV.optimize(n_trials = 30) 
+CV.optimize(n_trials = 30)
 ```
 
 ### 4.3 Making predictions
 
 + Now we can start making predictions. Program automatically selects the best hyperparameters and the best k_selected most important columns and calculates probabilities for each of the 7 classes.
 + The output file `output/predictions/pred_{suffix}` contains averages, standard deviations, mean +/- 2std, 5perc, 95perc, min max for each of the 7 classes. These values define the probability distributions that are created by making predictions in each of the folds of the n_repeats unique 5-folds (so `n_repeats*n_folds` unique samples).  
-+ Optionally, we set `rndstate_stability_check=True` (default). Throughout HPO and FS, xgb random state is fixed; this option will do a 3-repeat cross validation (3 * n_repeats random states) for the best `top_n = 5` metric params to check stability, and then automatically picks the one with the lowest logloss to do predictions with. The number of repeats is independent from `cv_params['n_repeats']` and both it and `top_n` can be changed inside `src.CVMain.predict`. The seeds-averaged metrics will be stored in `data/output/metrics/{suffix}_stability_check.csv`.
-+ In contrast to training, for each repeat and for each fold, a different xgb random state is chosen. Also, I may implement slight variation per sample or repeat over `colsample_by_tree` and `subsample`. 
++ In contrast to training, for each repeat and for each fold, a different xgb random state is chosen. 
 + Probability distributions are created for both 7 classes and 2 classes (win or lose). In case of two classes, a draw basically means money back so win probabilities are calculated as $$P_{win} = \frac{P_{KO} + P_{Sub} + P_{Dec}}{1-P_{Draw}}$$
 + Based on the validation set, the model also creates a plot to show how well it's calibrated.
 + Also makes predictions for debuting fighters, but the model does not take into account previous carreer stats. This means that, with luck, only height, reach and age are available. Take this into account when competing against other models and comparing accuracies. 
++ In stead of using the model parameters with the best metrics from the previous optimization step, you can also first do a rndstate_stability_check again and use the best paramaters of those.
 
-```python 
+```python
 CV.change_param(n_repeats = 200) # Takes n_repeats * n_folds samples with as many different random states
 CV.predict(rndstate_stability_check=True)
 ```
@@ -321,7 +325,7 @@ The port will auto-forward; click the globe icon in the Ports panel to open the 
 
 ## Acknowledements 
 
-Massive thanks to Erik Prjadka for his invaluable advice throughout, teaching me about data science principles and which machine learning method to use. Also to Sjoerd Visser for bringing me up to date on modern machine learning and coding standards and practices. 
+Massive thanks to Erik Prjadka for his invaluable advice throughout, teaching me about data science principles and which machine learning method to use. Also to Sjoerd Visser for bringing me up to date on machine learning and coding standards and practices. 
 
 ## Sources 
 - www.ufcstats.com

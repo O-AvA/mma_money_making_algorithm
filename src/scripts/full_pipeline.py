@@ -37,12 +37,12 @@ def run_full_pipeline(skip_data_cleaning=False, skip_feature_engineering=False):
         'wl_elos': {'which_K': 'log'}
     }
     
-    # Pipeline parameters
-    suffix = 'svd'
-    last_years = 3
-    sample_size = 0.1
+    # Validation set parameters   # FROM THE NEXT LINE ONWARDS PASTE TO MMA_LIGHT
+    suffix = 'natty'
+    last_years = 5
+    sample_size = 0.08
     if_on_size_then_randomly = False
-    
+
     # Start the complete pipeline
     with pipeline_manager.pipeline_run(
         suffix=suffix,
@@ -61,8 +61,7 @@ def run_full_pipeline(skip_data_cleaning=False, skip_feature_engineering=False):
                 prefer_external=True,
                 new_fights_only=False
             ):
-                #process_all_data(prefer_external=True, new_fights_only=False)
-                z = 3
+                process_all_data(prefer_external=True, new_fights_only=False)
         else:
             logger.info("Skipping data cleaning stage...")
         
@@ -83,12 +82,12 @@ def run_full_pipeline(skip_data_cleaning=False, skip_feature_engineering=False):
                         sample_size=sample_size, 
                         if_on_size_then_randomly = if_on_size_then_randomly
                 ) 
-                #TVP.construct_pred(scrape_and_clean=True)
+                TVP.construct_pred(scrape_and_clean=False)
 
                 if suffix == 'symm':
                     TVP.symmetrize(for_svd=False)
                 elif suffix == 'svd':
-                    TVP.do_svd(k=75)
+                    TVP.do_svd(k=225)
                 elif suffix == 'natty': 
                     TVP.go_natty() 
         else:
@@ -115,13 +114,16 @@ def run_full_pipeline(skip_data_cleaning=False, skip_feature_engineering=False):
                 'n_folds': 5,
                 'fold_seed': 42
             }
+
+
+            ######################  INITIAL TRAINING
             hyper_params = {
-                "max_depth": (2,6),
-                "learning_rate": (0.02, 0.07),
-                "n_estimators": (100,700),
-                "min_child_weight": (0, 25),
-                "gamma": (1, 10),
-                "subsample": (0.7,0.9),
+                "max_depth": (3,7),
+                "learning_rate": (0.0175,0.04),
+                "n_estimators": (500,750),
+                "min_child_weight": (5,30),
+                "gamma": (1,5),
+                "subsample": 0.8,
                 "colsample_bytree": 1,
                 # Optional regularization
                 "reg_alpha": 0.0,
@@ -132,35 +134,40 @@ def run_full_pipeline(skip_data_cleaning=False, skip_feature_engineering=False):
             CV.set_hyper_params(hyper_params)
 
             # Hyperparameter optimization → Feature selection → Final predictions
-            CV.optimize(n_trials=25) 
-       
-            CV.change_cv_param('n_repeats', 3) 
-            CV.select_features()
+            CV.optimize(n_trials=2)
 
-            # Re-training and also varying over the most important features 
-            select_by = 'frequency'   # by index or frequency
+            ##################### FEATURE SELECTION
+            stability_check_params = {
+                    'top_n': 1, 
+                    'n_repeats': 2
+            }
+            CV.set_stability_check_params(stability_check_params)
+            CV.select_features(rndstate_stability_check=True)
+
+            ##################### RETRAINING
+            select_by = 'index'   # by index or frequency
 
             if select_by == 'frequency': 
                 max_freq = CV.cv_params['n_repeats'] * CV.cv_params['n_folds'] 
                 #feature_range = (max(max_freq-2, 1), max_freq)
-                feature_range = (11, 15) 
+                feature_range = (12, 15) 
             elif select_by == 'index': 
-                max_index = len(CV.Xt.columns)
-                feature_range = (50, max_index - 50) 
+                #max_index = len(CV.Xt.columns)
+                #feature_range = (50, max_index - 50) 
+                feature_range = (80,150)
             CV.set_feature_params(
                     select_by = select_by, 
                     feature_range = feature_range
             ) 
 
-            CV.change_cv_param('n_repeats', 1) 
-            CV.optimize(n_trials=25) 
+            #CV.change_cv_param('n_repeats', 2) 
+            CV.optimize(n_trials=2)
 
-            CV.change_cv_param('n_repeats', 60)
-            CV.predict()
+            ##################### PREDICTING
 
-
-
-
+            CV.change_cv_param('n_repeats', 2)
+            CV.change_cv_param('n_folds', 2)
+            CV.predict(rndstate_stability_check=True)
 if __name__ == "__main__":
     import argparse
     
