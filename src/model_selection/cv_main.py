@@ -207,7 +207,7 @@ class CVMain:
                     except Exception:
                         pass
             else:
-                self._xgb_seed_stability_check(top_n=top_n, n_repeats=n_repeats)
+                self._xgb_seed_stability_check()#top_n=top_n, n_repeats=n_repeats)
             metrics_path = ssc_metrics_path
         else:
             metrics_path = self.metrics_path
@@ -331,7 +331,7 @@ class CVMain:
                     except Exception:
                         pass
             else:
-                self._xgb_seed_stability_check(top_n=top_n, n_repeats=n_repeats)
+                self._xgb_seed_stability_check()#top_n=top_n, n_repeats=n_repeats)
             metrics_path = ssc_metrics_path
         else:
             metrics_path = self.metrics_path
