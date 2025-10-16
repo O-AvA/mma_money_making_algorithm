@@ -12,7 +12,7 @@ Highlights
 - Includes singular value decomposition, feature selection and other optional data processing features.
 
 Notes 
-- This is a light version of the model with fewer feature sets, and is only about 60% accurate. Also, the data cleaning module is disabled. You can, however, still use this code this play around and make your own predictions with.
+- This is a light version of the model with fewer feature sets, and is only about 60% accurate. Also, the data cleaning module is disabled. You can, however, still use the notebook to play around and make your own predictions with.
 - The full pipeline is also contained in the notebook and in scripts/full_pipeline.py
 
 DISCLAIMER 
