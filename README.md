@@ -12,7 +12,7 @@ Highlights
 - Includes singular value decomposition, feature selection and other optional data processing features.
 
 Notes 
-- This is a light version of the model with fewer feature sets, meaning it will only be about 60% accurate. Also, the data cleaning module is disabled. You can, however, still use this code this play around and make your own predictions with.
+- This is a light version of the model with fewer feature sets, and is only about 60% accurate. Also, the data cleaning module is disabled. You can, however, still use this code this play around and make your own predictions with.
 - The full pipeline is also contained in the notebook and in scripts/full_pipeline.py
 
 DISCLAIMER 
@@ -55,7 +55,8 @@ Python:
 from src.data_processing.clean_raw_data import process_all_data
 
 # prefer_external=True tries to pull fresh CSVs from GitHub; falls back to local files if it fails
-process_all_data(prefer_external=True, new_fights_only=False)
+# Disabled in light version
+#process_all_data(prefer_external=True, new_fights_only=False)
 # Expected: data/interim/clean_ufcstats-com_data.csv
 ```
 
@@ -73,15 +74,10 @@ Finished sets to choose from:
 - base_features (always include)
 - elo_params (always include for elo feature sets)
 - wl_elos
-- stat_elos_round_averages
-- stat_elos_per_round (alternative to the above; not recommended) 
-- acc_elos_round_averages
-- acc_elos_per_round (alternative to the above; not recommended)
-- rock_paper_scissor (who beat who and how?)
 
 Regarding elo_params 
 - get_elo_params creates multiple K-parameters which can then be chosen by the feature model using 'which_K' ('cust' or 'log', per round or not per round). 
-- I believe that currently K-parameters that are not used by the other elo feature sets are automatically discarded in the final model, but I have to double check. In any case, it may be worthwhile keeping them in, because the K-parameters acts as an experience measures for the fighters, so not only help the model understand the elo rating system but also directly help it understand the data. 
+- I believe that currently K-parameters that are not used by the other elo feature set automatically discarded in the final model, but I have to double check. In any case, it may be worthwhile keeping them in, because the K-parameters acts as an experience measures for the fighters, so not only help the model understand the elo rating system but also directly help it understand the data. 
 
 Notes:
 - Keep the param `process_upcoming_fights=False` at this stage (otherwise handled separately).
@@ -97,32 +93,15 @@ feature_sets = {}
 base_features_params = {}
 elo_params = {"d_params": set_elo_params()}  # provide Elo parameters
 wl_elos_params = {"which_K": "log"}
-stat_elos_round_averages_params = {
-    "which_K": "log",
-    "exact_score": True,
-    "always_update": False,
-}
-stat_elos_per_round_params = {
-    "which_K": "log",
-    "exact_score": True,
-    "always_update": False,
-}
-acc_elos_round_averages_params = {"which_K": "log"}
-acc_elos_per_round_params = {}
-rock_paper_scissor_params = {"intervals": [0, 2]}  # or [0, 2, 4]
 
 # Choose final feature sets
 feature_sets["base_features"] = base_features_params
 feature_sets["elo_params"] = elo_params
 feature_sets["wl_elos"] = wl_elos_params
-feature_sets["stat_elos_round_averages"] = stat_elos_round_averages_params
-# feature_sets["stat_elos_per_round"] = stat_elos_per_round_params
-feature_sets["acc_elos_round_averages"] = acc_elos_round_averages_params
-# feature_sets["acc_elos_per_round"] = acc_elos_per_round_params
-# feature_sets["rock_paper_scissor"] = rock_paper_scissor_params
 
 # Create feature sets (writes CSVs under data/features/)
-FeatureManager(feature_sets, overwrite_all=True)
+# True disabled for the light version
+FeatureManager(feature_sets, overwrite_all=False)
 ```
 
 Expected outputs under `data/features/`: one CSV per enabled set, e.g., `base_features.csv`, `elo_params.csv`, `wl_elos.csv`, etc.
@@ -193,7 +172,7 @@ Notes
 - Ceates datasets `processed/train_{suffix}`, `processed/valid_{suffix}`, `processed/pred_{suffix}`
 
 ```python 
-suffix = 'symm'
+suffix = 'natty'
 
 if suffix == 'symm': 
     TVP.symmetrize(for_svd = False) 
