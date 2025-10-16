@@ -55,8 +55,7 @@ Python:
 from src.data_processing.clean_raw_data import process_all_data
 
 # prefer_external=True tries to pull fresh CSVs from GitHub; falls back to local files if it fails
-# Disabled in light version
-#process_all_data(prefer_external=True, new_fights_only=False)
+process_all_data(prefer_external=True, new_fights_only=False)
 # Expected: data/interim/clean_ufcstats-com_data.csv
 ```
 
@@ -100,8 +99,7 @@ feature_sets["elo_params"] = elo_params
 feature_sets["wl_elos"] = wl_elos_params
 
 # Create feature sets (writes CSVs under data/features/)
-# True disabled for the light version
-FeatureManager(feature_sets, overwrite_all=False)
+FeatureManager(feature_sets, overwrite_all=True)
 ```
 
 Expected outputs under `data/features/`: one CSV per enabled set, e.g., `base_features.csv`, `elo_params.csv`, `wl_elos.csv`, etc.
@@ -125,7 +123,7 @@ from src.model_selection.trainvalpred import TrainValPred
 TVP = TrainValPred(feature_sets)
 
 # Merge all selected feature sets
-TVP.merge_features(overwrite_feature_sets=False)
+TVP.merge_features(overwrite_feature_sets=True)
 
 # Choose validation partition (recent years and sample fraction; smallest takes precedence)
 last_years = 1
