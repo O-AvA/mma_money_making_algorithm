@@ -191,7 +191,6 @@ elif suffix == 'natty':
 ## 4) Training and predictions
 
 ### 4.1 Hyperparameter optimization (Optuna)
-
 ```python
 suffix = 'symm'
 CV = CrossValidationMain('symm') 
