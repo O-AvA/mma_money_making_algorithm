@@ -1,27 +1,25 @@
 upp_low,temp_f_id,name f1,name f2,tau
-1,9,Aiemann Zahabi,Marlon Vera,1276
-1,3,Aoriqileng,Cody Gibson,1276
-0,0,Azamat Bekoev,Yousri Belgaroui,1276
-1,11,Brendan Allen,Reinier de Ridder,1276
-0,1,Bruno Fly Silva,HyunSung Park,1276
-0,2,Charles Jourdain,Davey Grant,1276
-0,3,Cody Gibson,Aoriqileng,1276
-0,4,Danny Barlow,Djorden Santos,1276
-1,2,Davey Grant,Charles Jourdain,1276
-1,4,Djorden Santos,Danny Barlow,1276
-1,7,Drew Dober,Kyle Prepolec,1276
-1,1,HyunSung Park,Bruno Fly Silva,1276
-1,8,Jasmine Jasudavicius,Manon Fiorot,1276
-0,5,Kevin Holland,Mike Malott,1276
-0,6,Kyle Nelson,Matt Frevola,1276
-0,7,Kyle Prepolec,Drew Dober,1276
-0,8,Manon Fiorot,Jasmine Jasudavicius,1276
-0,9,Marlon Vera,Aiemann Zahabi,1276
-1,6,Matt Frevola,Kyle Nelson,1276
-0,10,Melissa Croden,Tainara Lisboa,1276
-1,5,Mike Malott,Kevin Holland,1276
-1,12,Ravena Oliveira,Stephanie Luciano,1276
-0,11,Reinier de Ridder,Brendan Allen,1276
-0,12,Stephanie Luciano,Ravena Oliveira,1276
-1,10,Tainara Lisboa,Melissa Croden,1276
-1,0,Yousri Belgaroui,Azamat Bekoev,1276
+0,0,Abdul-Kareem Al-Selwady,Matheus Camilo,1277
+0,1,Aleksandar Rakic,Azamat Murzakanov,1277
+0,2,Alexander Volkov,Jailton Almeida,1277
+1,1,Azamat Murzakanov,Aleksandar Rakic,1277
+0,3,Azat Maksum,Mitch Raposo,1277
+1,4,Chris Barnett,Hamdy Abdelwahab,1277
+1,9,Ciryl Gane,Tom Aspinall,1277
+0,4,Hamdy Abdelwahab,Chris Barnett,1277
+0,5,Ikram Aliskerov,JunYong Park,1277
+1,2,Jailton Almeida,Alexander Volkov,1277
+0,6,Jaqueline Amorim,Mizuki,1277
+1,8,Jose Delgado,Nathaniel Wood,1277
+1,5,JunYong Park,Ikram Aliskerov,1277
+0,7,Ludovit Klein,Mateusz Rebecki,1277
+1,11,Mackenzie Dern,Virna Jandiroba,1277
+1,10,Mario Bautista,Umar Nurmagomedov,1277
+1,7,Mateusz Rebecki,Ludovit Klein,1277
+1,0,Matheus Camilo,Abdul-Kareem Al-Selwady,1277
+1,3,Mitch Raposo,Azat Maksum,1277
+1,6,Mizuki,Jaqueline Amorim,1277
+0,8,Nathaniel Wood,Jose Delgado,1277
+0,9,Tom Aspinall,Ciryl Gane,1277
+0,10,Umar Nurmagomedov,Mario Bautista,1277
+0,11,Virna Jandiroba,Mackenzie Dern,1277

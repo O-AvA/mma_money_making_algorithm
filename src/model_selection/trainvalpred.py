@@ -4,9 +4,11 @@ import numpy as np
 from loguru import logger
 import matplotlib.pyplot as plt 
 
-from src.utils.general import (open_csv, get_data_path, store_csv, creaopen_file)
+from src.utils.general import (open_csv, get_data_path, store_csv, get_elo_feature_names, creaopen_file)
 from src.data_processing.feature_manager import FeatureManager 
 from src.data_processing.cleaned_data import CleanedFights 
+from src.data_processing.scrape_pred import scrape_pred
+from src.data_processing.clean_pred import clean_pred
 import mlflow
 from mlflow.tracking import MlflowClient
 
@@ -139,7 +141,9 @@ class TrainValPred:
 
     def construct_pred(self, scrape_and_clean = True):
         logger.info('Constructing dataset to predict...') 
-
+        if scrape_and_clean: 
+            scrape_pred() 
+            clean_pred()
         
         # Check if we're in a pipeline context
         try:
@@ -436,14 +440,14 @@ class TrainValPred:
         except Exception as e:
             logger.warning(f"Could not log split_trainval metrics/artifacts: {e}")
 
-    def get_folds(self, suffix, n_repeats, n_folds = 5, first_seed=None):   
+    def get_folds(self, suffix, n_repeats, n_folds = 5, first_seed=None):
         suffix = f'_{suffix}' if suffix != '' else suffix 
 
         dft = self.open(f'train{suffix}') 
         f_ids = dft['temp_f_id'].unique()
 
         if first_seed is None: 
-            seeds = np.random.randint(low=0, high=100, size=n_repeats) 
+            seeds = np.random.randint(low=0, high=10e6, size=n_repeats) 
         else: 
             seeds = range(first_seed, first_seed + n_repeats)   
         
@@ -565,6 +569,14 @@ class TrainValPred:
 
         logger.info('Beginning (anti-)symmetrization')
 
+        # Configure optional swap lists when acc features present
+        A2_labels, D2_labels = [], []
+        if self.feature_sets and any('acc' in fset_name for fset_name in self.feature_sets.keys()):
+            rounds = any('acc_elos_per_round' in fset_name for fset_name in self.feature_sets.keys())
+            avgs = not rounds
+            A2_labels = get_elo_feature_names(which=['A'], fighters=[2], avgs=avgs, rounds=rounds, extras=False)
+            D2_labels = get_elo_feature_names(which=['D'], fighters=[2], avgs=avgs, rounds=rounds, extras=False)
+
         # oh_cols contains one_hot_columns that can also figure as flags, but del_1h only contains pure one-hot
         oh_cols = self.get_1h_columns()
         cols1 = [col for col in data[0].columns if col.endswith('f1') and col not in oh_cols]
@@ -572,7 +584,9 @@ class TrainValPred:
 
         before_cols = [data[i].shape[1] for i in range(len(data))]
         for k in range(len(data)):
-            
+            if A2_labels and D2_labels:
+                data[k][A2_labels], data[k][D2_labels] = data[k][D2_labels], data[k][A2_labels]
+
             # Set nans to 0 when (anti-)symmetrizing for the svd.
             dfk = data[k].fillna(0) if for_svd else data[k]
 
@@ -831,6 +845,9 @@ if __name__ == '__main__':
         'base_features': {},
         'elo_params': {'d_params': set_elo_params()},
         'wl_elos': {'which_K': 'log'},
+        'stat_elos_round_averages': {'which_K': 'log', 'always_update': False, 'exact_score': True},
+        'acc_elos_round_averages': {'which_K': 'log'},
+        'rock_paper_scissor': {'intervals': [0, 2]},
     }
 
     TVP = TrainValPred(feature_sets)
@@ -845,8 +862,8 @@ if __name__ == '__main__':
     #FeatureManager({'rock_paper_scissor': feature_sets['rock_paper_scissor']}, overwrite_all=True) 
     #TVP.merge_features(overwrite_feature_sets=False) 
     #TVP.show_correlations(TVP.open_merged_features()) 
-    #TVP.construct_pred()
-    TVP.split_trainval(last_years = 5, sample_size = 0.15) 
+    TVP.construct_pred()
+    #TVP.split_trainval(last_years = 5, sample_size = 0.15) 
     #TVP.symmetrize(for_svd=False) 
     #TVP.do_svd(plot_sv = True)  
 
