@@ -230,6 +230,7 @@ CV.optimize(n_trials = 50)
 + The following code snippet automatically selects the best hyperparameters from the output metrics file and starts feature selection. It outputs file `output/feature_selection/feature_frequency`.
 + After ranking all features by their importance and counting how many times they it starts optimizing hyperparameters again but this time also varying over a range of the k_selected-th most important features.
 + Because during HPO xgb random_state is fixed, we can set `rndstate_stability_check=True` to measure the stability of the model over different seeds. It will take the `top_n` parameter combinations with the best metrics and does `n_repeats` of cross validation, where inside each fold a different random seed is chosen. The seeds-averaged metrics will be stored in `data/output/metrics/{suffix}_stability_check.csv` and the best ones are automatically retrieved for further feature selection.
++ Please note, re-training varies over the parameter ranges (+/- 20%) from the top 20 best metrics from initial training. This overrides the `hyper_params`! You can therefore iteratively re-train and still improve without having to set hyperparameters manually. 
 
 ```python
 # Optionally, change default stability check params 

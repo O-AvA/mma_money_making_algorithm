@@ -512,7 +512,8 @@ class CVMain:
 
                 model.fit(Xtt, ytt, eval_set=[(Xtv, ytv)], verbose=False)
 
-                if hasattr(self, 'Xp'): 
+                if hasattr(self, 'Xp'):
+                    print('huh') 
                     return model 
                 
                 yt_proba = model.predict_proba(Xtv)

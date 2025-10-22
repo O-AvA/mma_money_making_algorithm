@@ -4,7 +4,7 @@ import numpy as np
 from loguru import logger
 import matplotlib.pyplot as plt 
 
-from src.utils.general import (open_csv, get_data_path, store_csv, get_elo_feature_names, creaopen_file)
+from src.utils.general import (open_csv, get_data_path, store_csv, creaopen_file)
 from src.data_processing.feature_manager import FeatureManager 
 from src.data_processing.cleaned_data import CleanedFights 
 from src.data_processing.scrape_pred import scrape_pred
@@ -569,14 +569,6 @@ class TrainValPred:
 
         logger.info('Beginning (anti-)symmetrization')
 
-        # Configure optional swap lists when acc features present
-        A2_labels, D2_labels = [], []
-        if self.feature_sets and any('acc' in fset_name for fset_name in self.feature_sets.keys()):
-            rounds = any('acc_elos_per_round' in fset_name for fset_name in self.feature_sets.keys())
-            avgs = not rounds
-            A2_labels = get_elo_feature_names(which=['A'], fighters=[2], avgs=avgs, rounds=rounds, extras=False)
-            D2_labels = get_elo_feature_names(which=['D'], fighters=[2], avgs=avgs, rounds=rounds, extras=False)
-
         # oh_cols contains one_hot_columns that can also figure as flags, but del_1h only contains pure one-hot
         oh_cols = self.get_1h_columns()
         cols1 = [col for col in data[0].columns if col.endswith('f1') and col not in oh_cols]
@@ -584,9 +576,6 @@ class TrainValPred:
 
         before_cols = [data[i].shape[1] for i in range(len(data))]
         for k in range(len(data)):
-            if A2_labels and D2_labels:
-                data[k][A2_labels], data[k][D2_labels] = data[k][D2_labels], data[k][A2_labels]
-
             # Set nans to 0 when (anti-)symmetrizing for the svd.
             dfk = data[k].fillna(0) if for_svd else data[k]
 
@@ -844,10 +833,7 @@ if __name__ == '__main__':
     feature_sets = {
         'base_features': {},
         'elo_params': {'d_params': set_elo_params()},
-        'wl_elos': {'which_K': 'log'},
-        'stat_elos_round_averages': {'which_K': 'log', 'always_update': False, 'exact_score': True},
-        'acc_elos_round_averages': {'which_K': 'log'},
-        'rock_paper_scissor': {'intervals': [0, 2]},
+        'wl_elos': {'which_K': 'log'}
     }
 
     TVP = TrainValPred(feature_sets)
@@ -859,7 +845,6 @@ if __name__ == '__main__':
     #clean_pred() 
     #TVP.construct_pred(scrape_and_clean=False)
 
-    #FeatureManager({'rock_paper_scissor': feature_sets['rock_paper_scissor']}, overwrite_all=True) 
     #TVP.merge_features(overwrite_feature_sets=False) 
     #TVP.show_correlations(TVP.open_merged_features()) 
     TVP.construct_pred()

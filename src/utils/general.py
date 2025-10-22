@@ -1,15 +1,5 @@
 """
-General utility functions for UFC ML Betting System
-
-This module contains common utility functions used throughout the project.
-Migrated and modernized from _old_ufcbets/general.py
-
-Key functionality:
-- File I/O operations (CSV reading/writing)
-- Data manipulation helpers
-- ELO calculation utilities
-- Feature engineering helpers
-- Statistical functions
+General functions 
 """
 
 import os
