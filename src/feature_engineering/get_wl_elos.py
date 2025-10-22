@@ -11,7 +11,7 @@ from src.utils.general import (open_csv, store_csv, Dict,
 from src.data_processing.cleaned_data import CleanedFights 
 from src.data_processing.upcoming_fights import UpcomingFights 
 
-def get_wl_elos(win_score = [1,1,1,0.5,1,1,1],
+def get_wl_elos(win_score = [1,1,1,0.5,0,0,0],
                 which_K = 'log', 
                 process_upcoming_fights=False): 
     # Win score: [KO win, Sub win, Dec win, Draw, Dec loss, ...]  
@@ -119,14 +119,14 @@ if __name__ == '__main__':
     d_params = {} 
     d_params['K0']  = 40
     d_params['Kmin'] = 5
-    d_params['wf'] = 0.8 
-    d_params['ww'] = 0.5 
-    d_params['alpha'] = 0.8
-    d_params['gamma'] = 0.05
+    d_params['wf'] = 1
+    d_params['ww'] = 1
+    d_params['alpha'] = 1
+    d_params['gamma'] = 0.03
 
     get_elo_params(d_params) 
 
-    #get_wl_elos(which_K='log') 
+    get_wl_elos(which_K='log')
     wl_elos_path = get_data_path('features') / 'wl_elos.csv'
     dfe = open_csv(wl_elos_path) 
     dfe.drop(columns=['name f1', 'name f2'] + [col for col in dfe.columns if 'REM' in col],
@@ -135,18 +135,20 @@ if __name__ == '__main__':
     #dfe['result'] = CleanedFights()['result']
     dfe['tau'] = CleanedFights()['tau']
     dfe = dfe[dfe['result'] >= 0] 
-    dfe['result'] = dfe['result'].map({0:0, 1: 0, 2: 0, 
-                                       3: 1, 
-                                       4: 2, 5: 2, 6: 2
-                                       }) 
 
+    dfe['DE f1'] = dfe['E f1'] - dfe['E f2']
+    dfe['DE f2'] = dfe['E f2'] - dfe['E f1']
     dfe['DR f1'] = dfe['R f1'] - dfe['R f2']
     dfe['DR f2'] = dfe['R f2'] - dfe['R f1']
 
     print('result' in dfe.columns) 
     dfe = CleanedFights(dfe).duplicate(base_cols=dfe.columns.tolist())     
     print('result' in dfe.columns) 
-
+    dfe['result'] = dfe['result'].map({0:0, 1: 0, 2: 0, 
+                                       3: 2, 
+                                       4: 1, 5:1, 6: 1
+                                       }) 
+    dfe = dfe[dfe['result'] != 2]
     dfe.drop(columns=dfe.columns[dfe.columns.isin(['tau','upp_low','temp_f_id'])], inplace=True)
     correlations = dfe.corr()['result'].abs().sort_values(ascending=False)
     for col, corr in correlations.items():
