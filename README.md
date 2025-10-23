@@ -13,6 +13,7 @@ Highlights
 
 Notes 
 - The full pipeline is also contained in the notebook and in scripts/full_pipeline.py
+- In the version uploaded to GitHub, certain feature sets and the data-cleaning module are disabled. You can, however, still use the notebook to play around and make your own predictions with, using a model that is still more than 63% accurate on win- or lose and more than 31% on 7 win outcomes. 
 
 DISCLAIMER 
 - This is not to be used for gambling! The purpose of this project is to obtain statistics for price estimation and risk analysis. If this model does what it should, it would tell you sportsbook offer unfavorable prices!
