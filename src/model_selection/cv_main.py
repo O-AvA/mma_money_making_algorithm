@@ -617,6 +617,7 @@ class CVMain:
                 #float_params = [k for k in hyper_params.keys() if k not in int_params] 
                 min_prm = round(min_prm) if k in int_params else float(min_prm) 
                 max_prm = round(max_prm) if k in int_params else float(max_prm) 
+                max_prm = 
 
                 if min_prm != max_prm: 
                     hyper_params[k] = (min_prm, max_prm)

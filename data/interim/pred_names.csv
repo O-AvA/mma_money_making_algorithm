@@ -1,25 +1,27 @@
 upp_low,temp_f_id,name f1,name f2,tau
-0,0,Abdul-Kareem Al-Selwady,Matheus Camilo,1277
-0,1,Aleksandar Rakic,Azamat Murzakanov,1277
-0,2,Alexander Volkov,Jailton Almeida,1277
-1,1,Azamat Murzakanov,Aleksandar Rakic,1277
-0,3,Azat Maksum,Mitch Raposo,1277
-1,4,Chris Barnett,Hamdy Abdelwahab,1277
-1,9,Ciryl Gane,Tom Aspinall,1277
-0,4,Hamdy Abdelwahab,Chris Barnett,1277
-0,5,Ikram Aliskerov,JunYong Park,1277
-1,2,Jailton Almeida,Alexander Volkov,1277
-0,6,Jaqueline Amorim,Mizuki,1277
-1,8,Jose Delgado,Nathaniel Wood,1277
-1,5,JunYong Park,Ikram Aliskerov,1277
-0,7,Ludovit Klein,Mateusz Rebecki,1277
-1,11,Mackenzie Dern,Virna Jandiroba,1277
-1,10,Mario Bautista,Umar Nurmagomedov,1277
-1,7,Mateusz Rebecki,Ludovit Klein,1277
-1,0,Matheus Camilo,Abdul-Kareem Al-Selwady,1277
-1,3,Mitch Raposo,Azat Maksum,1277
-1,6,Mizuki,Jaqueline Amorim,1277
-0,8,Nathaniel Wood,Jose Delgado,1277
-0,9,Tom Aspinall,Ciryl Gane,1277
-0,10,Umar Nurmagomedov,Mario Bautista,1277
-0,11,Virna Jandiroba,Mackenzie Dern,1277
+0,0,Alice Ardelean,Montserrat Conejo Ruiz,1278
+0,1,Allan Nascimento,Rafael Estevam,1278
+1,12,Ante Delija,Waldo Cortes-Acosta,1278
+1,10,Ariane Carnelossi,Talita Alencar,1278
+0,2,Billy Elekana,Kevin Christian,1278
+1,11,ChangHo Lee,Timmy Cuamba,1278
+0,3,Charles Radtke,Daniel Frunza,1278
+1,3,Daniel Frunza,Charles Radtke,1278
+0,4,Dashon Johnson,Sedriques Dumas,1278
+1,9,David Onama,Steve Garcia,1278
+0,5,Isaac Dulgarian,Yadier del Valle,1278
+0,6,Jeremiah Wells,Themba Gorimbo,1278
+0,7,Ketlen Vieira,Norma Dumont,1278
+1,2,Kevin Christian,Billy Elekana,1278
+1,0,Montserrat Conejo Ruiz,Alice Ardelean,1278
+1,7,Norma Dumont,Ketlen Vieira,1278
+0,8,Phil Rowe,Seokhyeon Ko,1278
+1,1,Rafael Estevam,Allan Nascimento,1278
+1,4,Sedriques Dumas,Dashon Johnson,1278
+1,8,Seokhyeon Ko,Phil Rowe,1278
+0,9,Steve Garcia,David Onama,1278
+0,10,Talita Alencar,Ariane Carnelossi,1278
+1,6,Themba Gorimbo,Jeremiah Wells,1278
+0,11,Timmy Cuamba,ChangHo Lee,1278
+0,12,Waldo Cortes-Acosta,Ante Delija,1278
+1,5,Yadier del Valle,Isaac Dulgarian,1278

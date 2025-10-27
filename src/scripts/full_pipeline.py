@@ -77,6 +77,9 @@ def run_full_pipeline(skip_data_cleaning=False, skip_feature_engineering=False):
 
                 TVP = TrainValPred(feature_sets)
                 TVP.merge_features(overwrite_feature_sets=False)
+                cfm = TVP.open_merged_features()
+                cfm = cfm[col for col in cfm.columns if 'overlap' not in col]
+                store_csv(csm, get_data_path('interim') / 'chosen_features_merged.csv')
                 TVP.split_trainval(
                         last_years=last_years, 
                         sample_size=sample_size, 
@@ -120,9 +123,9 @@ def run_full_pipeline(skip_data_cleaning=False, skip_feature_engineering=False):
             hyper_params = {
                 "max_depth": (3,7),
                 "learning_rate": (0.018,0.03),
-                "n_estimators": (600,725),
-                "min_child_weight": (5,30),
-                "gamma": (1,10),
+                "n_estimators": (600,800),
+                "min_child_weight": 10,
+                "gamma": 1,
                 "subsample": (0.75,0.85),
                 "colsample_bytree": 1,
                 # Optional regularization
